@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
+from app.domain.enums import UserRole
 from app.db.session import SessionLocal
 from app.models.user import User
 
@@ -18,7 +19,7 @@ def run():
             name="Admin",
             email=email,
             password_hash=hash_password("Admin123*"),
-            role="ADMIN",
+            role=UserRole.ADMIN.value,
             is_active=True,
         )
         db.add(admin)

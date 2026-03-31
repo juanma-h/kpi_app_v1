@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
 
-from app.core.deps import get_db, get_current_user
-from app.core.security import verify_password, create_access_token
+from app.core.deps import get_auth_service, get_current_user
 from app.models.user import User
-from app.schemas.auth import LoginRequest, TokenResponse
+from app.schemas.auth import TokenResponse
 from app.schemas.user import UserMe
+from app.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -14,22 +13,12 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/login", response_model=TokenResponse)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
-
-    user = db.query(User).filter(User.email == form_data.username).first()
-
-    if not user or not verify_password(form_data.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas",
-        )
-
-    token = create_access_token(
-        subject=str(user.id),
-        extra_claims={"role": user.role},
+    token = auth_service.authenticate(
+        email=form_data.username,
+        password=form_data.password,
     )
-
     return TokenResponse(access_token=token)
 
 

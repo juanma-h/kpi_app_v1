@@ -9,10 +9,12 @@ ENV_FILE = BASE_DIR / ".env"
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=str(ENV_FILE), env_file_encoding="utf-8")
 
+    APP_NAME: str = "KPI App API"
     DATABASE_URL: str
     JWT_SECRET: str = "change_this_secret"
     JWT_ALG: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MIN: int = 60
+    BACKEND_CORS_ORIGINS: list[str] = []
 
 
 settings = Settings()
