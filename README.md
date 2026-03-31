@@ -35,7 +35,8 @@ Implementado:
 - creacion de sesion activa asociada al turno;
 - allowlist de dominios para sitios autorizados de medicion KPI;
 - captura controlada de eventos de actividad web;
-- modelos `users`, `shifts`, `sessions`, `allowlist_domains` y `activity_events`;
+- plantillas de horario y asignaciones por usuario;
+- modelos `users`, `shifts`, `sessions`, `allowlist_domains`, `activity_events`, `schedule_templates` y `user_schedule_assignments`;
 - capa inicial de servicios, repositorios, enums y excepciones de dominio;
 - migracion inicial con Alembic;
 - script para sembrar un usuario administrador;
@@ -94,6 +95,7 @@ kpi_app_v1/
 - `allowlist`: administracion de dominios autorizados para captura y medicion de KPIs.
 - `activity`: ingesta y consulta inicial de eventos de actividad ligados a turno, sesion y dominio permitido.
 - `kpis`: consultas operativas sobre actividad, sesiones y turnos para empleados y supervisores.
+- `schedules`: plantillas de horario, asignaciones por usuario y resolucion del horario esperado por fecha.
 - `core`: carga de configuracion, JWT, hashing y dependencias compartidas.
 - `repositories`: acceso desacoplado a persistencia.
 - `services`: logica de negocio aislada de FastAPI.
@@ -124,6 +126,15 @@ kpi_app_v1/
 - `GET /kpis/overview`
 - `GET /kpis/users/{user_id}/overview`
 - `GET /kpis/shifts/{shift_id}`
+- `GET /schedules/templates`
+- `GET /schedules/templates/{template_id}`
+- `POST /schedules/templates`
+- `PATCH /schedules/templates/{template_id}`
+- `PATCH /schedules/templates/{template_id}/status`
+- `GET /schedules/assignments`
+- `POST /schedules/assignments`
+- `GET /schedules/me/resolved`
+- `GET /schedules/users/{user_id}/resolved`
 
 ### Contratos importantes
 
@@ -139,7 +150,10 @@ kpi_app_v1/
 - `GET /activity/events` queda reservado para `ADMIN` y `SUPERVISOR`.
 - `GET /kpis/me/overview` expone resumen operativo del usuario autenticado.
 - `GET /kpis/overview`, `GET /kpis/users/{user_id}/overview` y `GET /kpis/shifts/{shift_id}` quedan reservados para `ADMIN` y `SUPERVISOR`.
-- la puntualidad queda declarada como no disponible hasta que exista un modulo de horarios programados.
+- la puntualidad ya se calcula comparando el turno real contra el horario asignado y su tolerancia.
+- `POST /schedules/templates`, `PATCH /schedules/templates/{template_id}`, `PATCH /schedules/templates/{template_id}/status` y `POST /schedules/assignments` quedan reservados para `ADMIN`.
+- `GET /schedules/templates`, `GET /schedules/assignments` y `GET /schedules/users/{user_id}/resolved` pueden ser consultados por `ADMIN` y `SUPERVISOR`.
+- `GET /schedules/me/resolved` permite al usuario autenticado consultar su horario esperado para una fecha.
 
 ## Variables de entorno
 
@@ -306,6 +320,22 @@ curl "http://127.0.0.1:8000/kpis/overview" \
   -H "Authorization: Bearer TU_TOKEN_SUPERVISOR"
 ```
 
+### Crear plantilla de horario
+
+```bash
+curl -X POST "http://127.0.0.1:8000/schedules/templates" \
+  -H "Authorization: Bearer TU_TOKEN_ADMIN" \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"Horario oficina\",\"description\":\"Lunes a viernes\",\"timezone_name\":\"America/Bogota\",\"grace_minutes\":10,\"is_active\":true,\"slots\":[{\"weekday\":\"MONDAY\",\"start_time\":\"08:00:00\",\"end_time\":\"17:00:00\"},{\"weekday\":\"TUESDAY\",\"start_time\":\"08:00:00\",\"end_time\":\"17:00:00\"}]}"
+```
+
+### Consultar horario esperado propio
+
+```bash
+curl "http://127.0.0.1:8000/schedules/me/resolved?target_date=2026-04-01" \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
 ## Lineamientos para el desarrollo de la aplicacion
 
 ### 1. Construir por modulos de negocio
@@ -424,8 +454,9 @@ Estado actual:
 Estado actual:
 
 - ya existe una primera capa backend de KPIs operativos sobre `activity_events`, `sessions` y `shifts`;
-- la puntualidad sigue pendiente hasta modelar horarios esperados;
-- las alertas aun no estan implementadas.
+- ya existe el submodulo de horarios y asignaciones para usuarios;
+- la puntualidad ya se calcula sobre horarios asignados, turnos reales y tolerancia;
+- las alertas aun no estan implementadas y quedan fuera del cierre de esta fase.
 
 ### Fase 4. Gobierno y escalado
 
@@ -443,7 +474,7 @@ Estado actual:
 - `requirements.txt` estaba incompleto y con una dependencia invalida;
 - el control de permisos ya diferencia `ADMIN` y `SUPERVISOR`, pero aun falta definir permisos por modulo futuro;
 - ya existe captura controlada de actividad, pero falta convertirla en KPIs, reportes y politicas de retencion automatizadas;
-- ya existe una primera base de KPIs operativos, pero aun faltan puntualidad real, alertas y supervision web;
+- ya existe una base de KPIs operativos y horarios con puntualidad real, pero aun faltan alertas y supervision web;
 - no hay estrategia de logging, monitoreo ni manejo formal de errores operativos.
 
 ## Siguiente paso recomendado
@@ -451,10 +482,10 @@ Estado actual:
 El siguiente hito razonable no es agregar mas endpoints sueltos, sino cerrar un MVP controlable:
 
 1. construir KPIs operativos sobre `activity_events`, `sessions` y `shifts`;
-2. modelar horarios esperados para habilitar puntualidad real;
-3. ampliar pruebas de integracion con persistencia real;
-4. definir el frontend minimo para operacion diaria;
-5. exponer vistas de supervision sobre actividad y cumplimiento;
+2. ampliar pruebas de integracion con persistencia real;
+3. definir el frontend minimo para operacion diaria;
+4. exponer vistas de supervision sobre actividad, cumplimiento y horarios;
+5. avanzar a alertas operativas y tableros web sobre la base ya cerrada.
 
 ## Notas de trabajo
 

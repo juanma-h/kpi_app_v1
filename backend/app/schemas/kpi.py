@@ -52,6 +52,16 @@ class OperationalKpiOverviewResponse(BaseModel):
     last_activity_at: datetime | None = None
     punctuality_supported: bool
     punctuality_reason: str | None = None
+    scheduled_shift_count: int
+    punctuality_evaluated_shift_count: int
+    punctual_shift_count: int
+    late_shift_count: int
+    unscheduled_shift_count: int
+    punctuality_rate: float
+    average_late_by_minutes: float
+    max_late_by_minutes: int
+    average_start_delay_minutes: float
+    max_start_delay_minutes: int
     domains: list[KpiDomainBreakdownResponse]
     event_types: list[KpiEventTypeBreakdownResponse]
 
@@ -62,3 +72,13 @@ class ShiftKpiResponse(OperationalKpiOverviewResponse):
     shift_started_at: datetime
     shift_ended_at: datetime | None = None
     device_labels: list[str]
+    is_scheduled: bool
+    is_punctual: bool | None = None
+    late_by_minutes: int | None = None
+    start_delay_minutes: int | None = None
+    scheduled_start_at: datetime | None = None
+    scheduled_end_at: datetime | None = None
+    grace_deadline_at: datetime | None = None
+    schedule_template_id: int | None = None
+    schedule_template_name: str | None = None
+    schedule_timezone_name: str | None = None

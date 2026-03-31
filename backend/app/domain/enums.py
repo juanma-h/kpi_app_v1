@@ -22,3 +22,13 @@ class ActivityEventType(StrEnum):
     HEARTBEAT = "HEARTBEAT"
     IDLE = "IDLE"
     RESUME = "RESUME"
+
+
+class Weekday(StrEnum):
+    MONDAY = "MONDAY"
+    TUESDAY = "TUESDAY"
+    WEDNESDAY = "WEDNESDAY"
+    THURSDAY = "THURSDAY"
+    FRIDAY = "FRIDAY"
+    SATURDAY = "SATURDAY"
+    SUNDAY = "SUNDAY"

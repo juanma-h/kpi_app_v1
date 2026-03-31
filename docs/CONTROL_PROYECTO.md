@@ -103,33 +103,38 @@ Decisiones tecnicas:
 
 Estado:
 
-- completada, validada y lista para commit cuando se decida cerrar el corte actual.
+- completada y committeada.
 
-## Fase 4 en curso
+## Fase 4 cerrada
 
 Objetivo principal:
 
 - transformar turnos, sesiones y actividad en KPIs operativos consultables.
 
-Implementado hasta ahora:
+Resultado:
 
 - se incorporo el modulo `kpis` con endpoints de consulta para usuario autenticado y supervision;
 - se agrego un servicio dedicado para calcular cobertura de actividad, tiempo activo, tiempo inactivo y trazabilidad por turno;
 - se agrego un repositorio de lectura separado para evitar mezclar analitica con repositorios transaccionales;
+- se incorporo el submodulo `schedules` con plantillas de horario, franjas por dia y asignaciones por usuario;
+- se agrego resolucion del horario esperado por fecha para usuario autenticado y supervision;
+- se integro la puntualidad real comparando turnos abiertos contra horario esperado y margen de tolerancia;
 - se incorporaron pruebas unitarias del servicio de KPIs;
-- se incorporaron pruebas HTTP para permisos y consultas del modulo.
+- se incorporaron pruebas unitarias del servicio de horarios;
+- se incorporaron pruebas HTTP para permisos y consultas de ambos modulos.
 
-Decisiones tecnicas vigentes:
+Decisiones tecnicas:
 
 - la Fase 4 usa calculos derivados de `activity_events`, `sessions` y `shifts` sin crear tablas analiticas nuevas por ahora;
 - la cobertura se mide sobre tiempo de sesion frente a tiempo trazado por eventos `HEARTBEAT` e `IDLE`;
-- la puntualidad no se cierra todavia porque requiere un modulo de horarios programados que aun no existe;
+- la puntualidad se evalua por turno usando horario asignado, zona horaria del horario y tolerancia configurada;
 - `EMPLOYEE` puede consultar solo `GET /kpis/me/overview`;
 - `SUPERVISOR` y `ADMIN` pueden consultar vistas globales, por usuario y por turno.
+- `ADMIN` administra plantillas y asignaciones de horario; `SUPERVISOR` puede consultarlas.
 
 Estado:
 
-- en curso, con base de KPIs operativos implementada.
+- completada y committeada.
 
 ## Regla documental a partir de ahora
 
@@ -143,7 +148,7 @@ Al cerrar cada fase se actualizara este documento con:
 
 ## Plan maestro del proyecto
 
-Con la Fase 3 cerrada, el plan completo de:
+Con la Fase 4 cerrada, el plan completo de:
 
 - desarrollo;
 - despliegue;
@@ -160,10 +165,10 @@ queda documentado en:
 
 ## Siguiente fase recomendada
 
-- cerrar la puntualidad mediante un modulo de horarios esperados;
+- construir el frontend operativo sobre los modulos ya cerrados;
+- exponer vistas web de supervision sobre actividad, cumplimiento y horarios;
 - definir alertas operativas sobre inactividad o baja cobertura;
-- ampliar pruebas de integracion con persistencia real;
-- preparar las vistas web de supervision sobre los KPIs ya expuestos.
+- ampliar pruebas de integracion con persistencia real.
 
 ## Regla de calidad minima
 

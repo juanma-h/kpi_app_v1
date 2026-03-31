@@ -29,7 +29,7 @@ La aplicacion debe permitir:
 
 ## Estado base actual
 
-Completado al cierre de Fase 3:
+Completado al cierre de Fase 4:
 
 - autenticacion JWT;
 - modulo de turnos y sesiones;
@@ -127,7 +127,7 @@ Decisiones cerradas en esta fase:
 
 Estado:
 
-- en curso.
+- completada.
 
 Objetivo:
 
@@ -143,8 +143,9 @@ Entregables:
 Avance actual:
 
 - ya existe una primera capa de KPIs operativos basada en `activity_events`, `sessions` y `shifts`;
+- ya existe un submodulo de horarios y asignaciones para soportar puntualidad futura;
 - se exponen consultas para vista propia, vista global, vista por usuario y vista por turno;
-- la puntualidad queda pendiente de un modulo de horarios programados;
+- la puntualidad ya se calcula sobre horarios asignados, turnos reales y tolerancia;
 - todavia no existen alertas operativas ni materializacion analitica.
 
 ## Fase 5. Frontend operativo
@@ -337,13 +338,8 @@ Toda decision de arquitectura, despliegue o captura de datos que cambie el alcan
 
 ## Siguiente hito recomendado
 
-El siguiente hito despues de Fase 3 es:
+El siguiente hito despues de Fase 4 es:
 
-- construir consultas y agregaciones de KPIs operativos;
-- medir actividad, inactividad y continuidad por turno;
-- preparar endpoints de supervision sobre la base de eventos ya capturados;
-- mantener la ingesta estable y sin ampliar alcance invasivo.
-
-Estado del hito:
-
-- iniciado y parcialmente implementado.
+- habilitar el frontend operativo para empleados y supervisores;
+- consumir los endpoints de turnos, usuarios, dominios, horarios y KPIs desde interfaz web;
+- mantener alertas y supervision avanzada como evolucion posterior sobre esa base.

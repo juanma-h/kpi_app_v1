@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Protocol, Sequence
 
 from app.models.activity_event import ActivityEvent
 from app.models.allowlist_domain import AllowlistDomain
+from app.models.schedule_template import ScheduleTemplate
+from app.models.schedule_template_slot import ScheduleTemplateSlot
 from app.models.session import Session as WorkSession
 from app.models.shift import Shift
+from app.models.user_schedule_assignment import UserScheduleAssignment
 from app.models.user import User
 
 
@@ -141,3 +144,54 @@ class OperationalKpiRepositoryProtocol(Protocol):
         user_id: int | None = None,
         shift_ids: Sequence[int] | None = None,
     ) -> Sequence[ActivityEvent]: ...
+
+
+class ScheduleRepositoryProtocol(Protocol):
+    def list_templates(self, *, is_active: bool | None = None) -> Sequence[ScheduleTemplate]: ...
+
+    def get_template_by_id(self, template_id: int) -> ScheduleTemplate | None: ...
+
+    def get_template_by_name(self, name: str) -> ScheduleTemplate | None: ...
+
+    def create_template(
+        self,
+        *,
+        name: str,
+        description: str | None,
+        timezone_name: str,
+        grace_minutes: int,
+        is_active: bool,
+        created_by_user_id: int | None,
+    ) -> ScheduleTemplate: ...
+
+    def replace_template_slots(
+        self,
+        *,
+        template: ScheduleTemplate,
+        slots: Sequence[dict[str, Any]],
+    ) -> None: ...
+
+    def list_assignments(
+        self,
+        *,
+        user_id: int | None = None,
+        is_active: bool | None = None,
+    ) -> Sequence[UserScheduleAssignment]: ...
+
+    def create_assignment(
+        self,
+        *,
+        user_id: int,
+        schedule_template_id: int,
+        effective_from: date,
+        effective_to: date | None,
+        is_active: bool,
+        notes: str | None,
+        assigned_by_user_id: int | None,
+    ) -> UserScheduleAssignment: ...
+
+    def get_user_by_id(self, user_id: int) -> User | None: ...
+
+    def commit(self) -> None: ...
+
+    def refresh(self, instance: Any) -> None: ...

@@ -60,8 +60,18 @@ def build_overview(*, user_id: int | None = None) -> dict:
         "distinct_domain_count": 1,
         "first_activity_at": now.isoformat(),
         "last_activity_at": now.isoformat(),
-        "punctuality_supported": False,
-        "punctuality_reason": "La puntualidad requiere un modulo de horarios programados que aun no existe.",
+        "punctuality_supported": True,
+        "punctuality_reason": None,
+        "scheduled_shift_count": 1,
+        "punctuality_evaluated_shift_count": 1,
+        "punctual_shift_count": 1,
+        "late_shift_count": 0,
+        "unscheduled_shift_count": 0,
+        "punctuality_rate": 1.0,
+        "average_late_by_minutes": 0.0,
+        "max_late_by_minutes": 0,
+        "average_start_delay_minutes": 0.0,
+        "max_start_delay_minutes": 0,
         "domains": [
             {
                 "source_domain": "portal.example.com",
@@ -98,6 +108,16 @@ class FakeOperationalKpiService:
                 "shift_started_at": datetime.now(timezone.utc).isoformat(),
                 "shift_ended_at": datetime.now(timezone.utc).isoformat(),
                 "device_labels": ["PC-01"],
+                "is_scheduled": True,
+                "is_punctual": True,
+                "late_by_minutes": 0,
+                "start_delay_minutes": 0,
+                "scheduled_start_at": datetime.now(timezone.utc).isoformat(),
+                "scheduled_end_at": datetime.now(timezone.utc).isoformat(),
+                "grace_deadline_at": datetime.now(timezone.utc).isoformat(),
+                "schedule_template_id": 1,
+                "schedule_template_name": "Horario oficina",
+                "schedule_timezone_name": "America/Bogota",
             }
         )
         return overview
@@ -164,6 +184,7 @@ class KpisApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["shift_id"], 11)
         self.assertEqual(response.json()["device_labels"], ["PC-01"])
+        self.assertTrue(response.json()["is_punctual"])
 
 
 if __name__ == "__main__":

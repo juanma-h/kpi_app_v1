@@ -4,16 +4,23 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
 from app.core.exceptions import NotFoundError, ValidationError
+from app.domain.schedule_resolution import resolve_schedule_for_shift_start
 from app.domain.enums import ActivityEventType, SessionStatus, ShiftStatus
 from app.models.activity_event import ActivityEvent
 from app.models.session import Session as WorkSession
 from app.models.shift import Shift
-from app.repositories.contracts import OperationalKpiRepositoryProtocol
+from app.repositories.contracts import OperationalKpiRepositoryProtocol, ScheduleRepositoryProtocol
 
 
 class OperationalKpiService:
-    def __init__(self, operational_kpi_repository: OperationalKpiRepositoryProtocol):
+    def __init__(
+        self,
+        *,
+        operational_kpi_repository: OperationalKpiRepositoryProtocol,
+        schedule_repository: ScheduleRepositoryProtocol,
+    ):
         self.operational_kpi_repository = operational_kpi_repository
+        self.schedule_repository = schedule_repository
 
     def get_overview(
         self,
@@ -101,6 +108,7 @@ class OperationalKpiService:
             sessions=sessions,
             events=events,
         )
+        resolution = self._resolve_shift_punctuality(shift)
         summary["shift_id"] = shift.id
         summary["shift_status"] = shift.status
         summary["shift_started_at"] = shift.start_at
@@ -111,6 +119,22 @@ class OperationalKpiService:
         summary["user_role"] = user.role if user else None
         summary["device_labels"] = sorted(
             {session.device_label for session in sessions if session.device_label}
+        )
+        summary.update(
+            {
+                "is_scheduled": resolution["is_scheduled"],
+                "is_punctual": resolution["is_punctual"],
+                "late_by_minutes": resolution["late_by_minutes"],
+                "start_delay_minutes": resolution["start_delay_minutes"],
+                "scheduled_start_at": resolution["expected_start_at"],
+                "scheduled_end_at": resolution["expected_end_at"],
+                "grace_deadline_at": resolution["grace_deadline_at"],
+                "schedule_template_id": resolution["schedule_template_id"],
+                "schedule_template_name": resolution["schedule_template_name"],
+                "schedule_timezone_name": resolution["timezone_name"],
+                "punctuality_supported": True,
+                "punctuality_reason": resolution["resolution_reason"],
+            }
         )
         return summary
 
@@ -164,6 +188,7 @@ class OperationalKpiService:
 
         first_activity_at = min((event.occurred_at for event in events), default=None)
         last_activity_at = max((event.occurred_at for event in events), default=None)
+        punctuality = self._build_punctuality_summary(shifts=shifts)
 
         return {
             "shift_count": len(shifts),
@@ -188,8 +213,7 @@ class OperationalKpiService:
             "distinct_domain_count": len(domain_counter),
             "first_activity_at": first_activity_at,
             "last_activity_at": last_activity_at,
-            "punctuality_supported": False,
-            "punctuality_reason": "La puntualidad requiere un modulo de horarios programados que aun no existe.",
+            **punctuality,
             "domains": [
                 {
                     "source_domain": domain,
@@ -223,6 +247,66 @@ class OperationalKpiService:
                 },
             ],
         }
+
+    def _build_punctuality_summary(self, *, shifts: list[Shift]) -> dict:
+        assignments_by_user: dict[int, list] = {}
+        scheduled_shift_count = 0
+        punctual_shift_count = 0
+        late_shift_count = 0
+        unscheduled_shift_count = 0
+        late_minutes: list[int] = []
+        start_delay_minutes: list[int] = []
+
+        for shift in sorted(shifts, key=lambda item: item.start_at):
+            resolution = self._resolve_shift_punctuality(shift, assignments_by_user=assignments_by_user)
+            if not resolution["is_scheduled"]:
+                unscheduled_shift_count += 1
+                continue
+
+            scheduled_shift_count += 1
+            if resolution["is_punctual"]:
+                punctual_shift_count += 1
+            else:
+                late_shift_count += 1
+            late_value = resolution["late_by_minutes"] or 0
+            start_delay_value = resolution["start_delay_minutes"] or 0
+            late_minutes.append(late_value)
+            start_delay_minutes.append(start_delay_value)
+
+        evaluated_shift_count = scheduled_shift_count
+        return {
+            "punctuality_supported": True,
+            "punctuality_reason": None,
+            "scheduled_shift_count": scheduled_shift_count,
+            "punctuality_evaluated_shift_count": evaluated_shift_count,
+            "punctual_shift_count": punctual_shift_count,
+            "late_shift_count": late_shift_count,
+            "unscheduled_shift_count": unscheduled_shift_count,
+            "punctuality_rate": self._safe_ratio(punctual_shift_count, evaluated_shift_count),
+            "average_late_by_minutes": round(sum(late_minutes) / len(late_minutes), 2) if late_minutes else 0.0,
+            "max_late_by_minutes": max(late_minutes, default=0),
+            "average_start_delay_minutes": round(sum(start_delay_minutes) / len(start_delay_minutes), 2)
+            if start_delay_minutes
+            else 0.0,
+            "max_start_delay_minutes": max(start_delay_minutes, default=0),
+        }
+
+    def _resolve_shift_punctuality(
+        self,
+        shift: Shift,
+        *,
+        assignments_by_user: dict[int, list] | None = None,
+    ) -> dict:
+        cache = assignments_by_user if assignments_by_user is not None else {}
+        assignments = cache.setdefault(
+            shift.user_id,
+            list(self.schedule_repository.list_assignments(user_id=shift.user_id, is_active=True)),
+        )
+        return resolve_schedule_for_shift_start(
+            user_id=shift.user_id,
+            assignments=assignments,
+            shift_start_at=shift.start_at,
+        )
 
     @staticmethod
     def _duration_seconds(start_at: datetime, end_at: datetime | None, now: datetime) -> int:
