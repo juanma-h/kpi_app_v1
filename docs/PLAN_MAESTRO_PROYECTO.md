@@ -125,6 +125,10 @@ Decisiones cerradas en esta fase:
 
 ## Fase 4. KPIs operativos
 
+Estado:
+
+- en curso.
+
 Objetivo:
 
 - transformar eventos y sesiones en indicadores utiles.
@@ -135,6 +139,13 @@ Entregables:
 - medicion de tiempo activo, pausas y puntualidad;
 - indicadores por usuario y turno;
 - endpoints de consulta para supervisores.
+
+Avance actual:
+
+- ya existe una primera capa de KPIs operativos basada en `activity_events`, `sessions` y `shifts`;
+- se exponen consultas para vista propia, vista global, vista por usuario y vista por turno;
+- la puntualidad queda pendiente de un modulo de horarios programados;
+- todavia no existen alertas operativas ni materializacion analitica.
 
 ## Fase 5. Frontend operativo
 
@@ -332,3 +343,7 @@ El siguiente hito despues de Fase 3 es:
 - medir actividad, inactividad y continuidad por turno;
 - preparar endpoints de supervision sobre la base de eventos ya capturados;
 - mantener la ingesta estable y sin ampliar alcance invasivo.
+
+Estado del hito:
+
+- iniciado y parcialmente implementado.

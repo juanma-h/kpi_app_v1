@@ -105,6 +105,32 @@ Estado:
 
 - completada, validada y lista para commit cuando se decida cerrar el corte actual.
 
+## Fase 4 en curso
+
+Objetivo principal:
+
+- transformar turnos, sesiones y actividad en KPIs operativos consultables.
+
+Implementado hasta ahora:
+
+- se incorporo el modulo `kpis` con endpoints de consulta para usuario autenticado y supervision;
+- se agrego un servicio dedicado para calcular cobertura de actividad, tiempo activo, tiempo inactivo y trazabilidad por turno;
+- se agrego un repositorio de lectura separado para evitar mezclar analitica con repositorios transaccionales;
+- se incorporaron pruebas unitarias del servicio de KPIs;
+- se incorporaron pruebas HTTP para permisos y consultas del modulo.
+
+Decisiones tecnicas vigentes:
+
+- la Fase 4 usa calculos derivados de `activity_events`, `sessions` y `shifts` sin crear tablas analiticas nuevas por ahora;
+- la cobertura se mide sobre tiempo de sesion frente a tiempo trazado por eventos `HEARTBEAT` e `IDLE`;
+- la puntualidad no se cierra todavia porque requiere un modulo de horarios programados que aun no existe;
+- `EMPLOYEE` puede consultar solo `GET /kpis/me/overview`;
+- `SUPERVISOR` y `ADMIN` pueden consultar vistas globales, por usuario y por turno.
+
+Estado:
+
+- en curso, con base de KPIs operativos implementada.
+
 ## Regla documental a partir de ahora
 
 Al cerrar cada fase se actualizara este documento con:
@@ -134,10 +160,10 @@ queda documentado en:
 
 ## Siguiente fase recomendada
 
-- construir KPIs operativos sobre eventos y sesiones;
-- medir tiempo activo, inactividad y trazas basicas por turno;
-- exponer consultas para supervision por usuario, turno y dominio;
-- mantener la analitica apoyada en el contrato de captura ya definido.
+- cerrar la puntualidad mediante un modulo de horarios esperados;
+- definir alertas operativas sobre inactividad o baja cobertura;
+- ampliar pruebas de integracion con persistencia real;
+- preparar las vistas web de supervision sobre los KPIs ya expuestos.
 
 ## Regla de calidad minima
 

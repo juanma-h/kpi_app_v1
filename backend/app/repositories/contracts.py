@@ -112,3 +112,32 @@ class ActivityEventRepositoryProtocol(Protocol):
     def commit(self) -> None: ...
 
     def refresh(self, instance: Any) -> None: ...
+
+
+class OperationalKpiRepositoryProtocol(Protocol):
+    def get_user_by_id(self, user_id: int) -> User | None: ...
+
+    def get_shift_by_id(self, shift_id: int) -> Shift | None: ...
+
+    def list_shifts(
+        self,
+        *,
+        user_id: int | None = None,
+        started_from: datetime | None = None,
+        started_to: datetime | None = None,
+        limit: int = 200,
+    ) -> Sequence[Shift]: ...
+
+    def list_sessions(
+        self,
+        *,
+        user_id: int | None = None,
+        shift_ids: Sequence[int] | None = None,
+    ) -> Sequence[WorkSession]: ...
+
+    def list_events(
+        self,
+        *,
+        user_id: int | None = None,
+        shift_ids: Sequence[int] | None = None,
+    ) -> Sequence[ActivityEvent]: ...

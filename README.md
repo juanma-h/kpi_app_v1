@@ -93,6 +93,7 @@ kpi_app_v1/
 - `shifts`: iniciar turno, consultar turno actual y cerrar turno.
 - `allowlist`: administracion de dominios autorizados para captura y medicion de KPIs.
 - `activity`: ingesta y consulta inicial de eventos de actividad ligados a turno, sesion y dominio permitido.
+- `kpis`: consultas operativas sobre actividad, sesiones y turnos para empleados y supervisores.
 - `core`: carga de configuracion, JWT, hashing y dependencias compartidas.
 - `repositories`: acceso desacoplado a persistencia.
 - `services`: logica de negocio aislada de FastAPI.
@@ -119,6 +120,10 @@ kpi_app_v1/
 - `POST /activity/events`
 - `GET /activity/events/me`
 - `GET /activity/events`
+- `GET /kpis/me/overview`
+- `GET /kpis/overview`
+- `GET /kpis/users/{user_id}/overview`
+- `GET /kpis/shifts/{shift_id}`
 
 ### Contratos importantes
 
@@ -132,6 +137,9 @@ kpi_app_v1/
 - `HEARTBEAT` e `IDLE` requieren `duration_seconds`; `PAGE_VIEW` y `RESUME` no lo admiten.
 - `GET /activity/events/me` permite al usuario consultar su propia actividad.
 - `GET /activity/events` queda reservado para `ADMIN` y `SUPERVISOR`.
+- `GET /kpis/me/overview` expone resumen operativo del usuario autenticado.
+- `GET /kpis/overview`, `GET /kpis/users/{user_id}/overview` y `GET /kpis/shifts/{shift_id}` quedan reservados para `ADMIN` y `SUPERVISOR`.
+- la puntualidad queda declarada como no disponible hasta que exista un modulo de horarios programados.
 
 ## Variables de entorno
 
@@ -284,6 +292,20 @@ curl "http://127.0.0.1:8000/activity/events/me?limit=20" \
   -H "Authorization: Bearer TU_TOKEN"
 ```
 
+### Consultar KPIs propios
+
+```bash
+curl "http://127.0.0.1:8000/kpis/me/overview" \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
+### Consultar KPIs globales
+
+```bash
+curl "http://127.0.0.1:8000/kpis/overview" \
+  -H "Authorization: Bearer TU_TOKEN_SUPERVISOR"
+```
+
 ## Lineamientos para el desarrollo de la aplicacion
 
 ### 1. Construir por modulos de negocio
@@ -399,6 +421,12 @@ Estado actual:
 - productividad por turno;
 - alertas por inactividad o anomalas.
 
+Estado actual:
+
+- ya existe una primera capa backend de KPIs operativos sobre `activity_events`, `sessions` y `shifts`;
+- la puntualidad sigue pendiente hasta modelar horarios esperados;
+- las alertas aun no estan implementadas.
+
 ### Fase 4. Gobierno y escalado
 
 - auditoria;
@@ -415,6 +443,7 @@ Estado actual:
 - `requirements.txt` estaba incompleto y con una dependencia invalida;
 - el control de permisos ya diferencia `ADMIN` y `SUPERVISOR`, pero aun falta definir permisos por modulo futuro;
 - ya existe captura controlada de actividad, pero falta convertirla en KPIs, reportes y politicas de retencion automatizadas;
+- ya existe una primera base de KPIs operativos, pero aun faltan puntualidad real, alertas y supervision web;
 - no hay estrategia de logging, monitoreo ni manejo formal de errores operativos.
 
 ## Siguiente paso recomendado
@@ -422,10 +451,10 @@ Estado actual:
 El siguiente hito razonable no es agregar mas endpoints sueltos, sino cerrar un MVP controlable:
 
 1. construir KPIs operativos sobre `activity_events`, `sessions` y `shifts`;
-2. ampliar pruebas de integracion con persistencia real;
-3. definir el frontend minimo para operacion diaria;
-4. exponer vistas de supervision sobre actividad y cumplimiento;
-5. avanzar a tableros y alertas sin romper el contrato de captura ya definido.
+2. modelar horarios esperados para habilitar puntualidad real;
+3. ampliar pruebas de integracion con persistencia real;
+4. definir el frontend minimo para operacion diaria;
+5. exponer vistas de supervision sobre actividad y cumplimiento;
 
 ## Notas de trabajo
 
