@@ -10,9 +10,30 @@ from app.models.user import User
 
 
 class UserRepositoryProtocol(Protocol):
+    def list_all(
+        self,
+        *,
+        is_active: bool | None = None,
+        role: str | None = None,
+    ) -> Sequence[User]: ...
+
     def get_by_id(self, user_id: int) -> User | None: ...
 
     def get_by_email(self, email: str) -> User | None: ...
+
+    def create(
+        self,
+        *,
+        name: str,
+        email: str,
+        password_hash: str,
+        role: str,
+        is_active: bool,
+    ) -> User: ...
+
+    def commit(self) -> None: ...
+
+    def refresh(self, instance: Any) -> None: ...
 
 
 class ShiftWorkRepositoryProtocol(Protocol):

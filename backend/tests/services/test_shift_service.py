@@ -1,6 +1,10 @@
 import unittest
 from datetime import datetime, timezone
 
+from bootstrap import configure_test_environment
+
+configure_test_environment()
+
 from app.core.exceptions import ConflictError
 from app.domain.enums import SessionStatus, ShiftStatus
 from app.models.session import Session as WorkSession

@@ -47,28 +47,32 @@ Estado:
 
 - completada y committeada.
 
-## Fase 2 planificada
+## Fase 2 cerrada
 
 Objetivo principal:
 
 - construir el modulo de usuarios y roles sobre la arquitectura actual.
 
-Alcance propuesto:
+Resultado:
 
-- CRUD de usuarios;
-- activacion y desactivacion de usuarios;
-- roles base `ADMIN`, `SUPERVISOR`, `EMPLOYEE`;
-- reglas de permisos mas claras por endpoint;
-- validaciones de negocio en servicios;
-- pruebas unitarias y, si el entorno acompana, primeras pruebas HTTP.
+- se incorporo el modulo `users` con endpoints administrativos;
+- se agrego un servicio dedicado para creacion, consulta, actualizacion y cambio de estado de usuarios;
+- se ampliaron contratos y repositorios para soportar gestion real de usuarios;
+- se formalizaron roles `ADMIN`, `SUPERVISOR` y `EMPLOYEE` en flujos administrativos;
+- se agregaron validaciones de negocio como correo unico, bloqueo de autodesactivacion y bloqueo de cambio de rol propio;
+- se incorporaron pruebas unitarias del servicio de usuarios;
+- se incorporaron primeras pruebas HTTP para permisos por rol.
 
-Entregables esperados:
+Decisiones tecnicas:
 
-- modelos y schemas alineados;
-- servicios y repositorios del modulo de usuarios;
-- endpoints administrativos para gestion de usuarios;
-- ampliacion de documentacion del backend;
-- commit de cierre de fase.
+- `ADMIN` puede crear y modificar usuarios;
+- `SUPERVISOR` puede consultar usuarios, pero no administrarlos;
+- la baja logica del usuario se maneja con `is_active`, no con borrado fisico;
+- el cambio de permisos mas fino por modulo se deja para fases posteriores.
+
+Estado:
+
+- completada, validada y lista para commit cuando se decida cerrar el corte actual.
 
 ## Regla documental a partir de ahora
 
@@ -80,13 +84,9 @@ Al cerrar cada fase se actualizara este documento con:
 - riesgos o limitaciones;
 - siguiente fase recomendada.
 
-## Plan maestro posterior a Fase 2
+## Plan maestro del proyecto
 
-Cuando la Fase 2 quede cerrada, se creara un documento adicional:
-
-- `docs/PLAN_MAESTRO_PROYECTO.md`
-
-Ese documento concentrara el plan completo de:
+Con la Fase 2 cerrada, el plan completo de:
 
 - desarrollo;
 - despliegue;
@@ -94,9 +94,18 @@ Ese documento concentrara el plan completo de:
 - operacion;
 - monitoreo;
 - mantenimiento correctivo y evolutivo;
-- roadmap de producto y backend/frontend.
+- roadmap de producto y backend/frontend;
 
-La razon para hacerlo despues de la Fase 2 es simple: para ese momento ya tendremos una base backend mas madura y el plan general podra definirse sobre una arquitectura menos provisional.
+queda documentado en:
+
+- `docs/PLAN_MAESTRO_PROYECTO.md`
+
+## Siguiente fase recomendada
+
+- modelado de eventos de actividad web;
+- relacion entre evento, usuario, turno, sesion y dominio permitido;
+- definicion del mecanismo de captura de datos para sitios dentro de la allowlist;
+- primeras consultas base para indicadores operativos.
 
 ## Regla de calidad minima
 

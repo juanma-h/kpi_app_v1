@@ -1,5 +1,9 @@
 import unittest
 
+from bootstrap import configure_test_environment
+
+configure_test_environment()
+
 from app.core.exceptions import AuthenticationError
 from app.core.security import hash_password
 from app.domain.enums import UserRole

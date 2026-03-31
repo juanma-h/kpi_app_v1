@@ -27,14 +27,16 @@ Implementado:
 - backend con FastAPI;
 - autenticacion con JWT;
 - endpoint de salud;
+- gestion administrativa de usuarios y roles;
 - apertura, consulta y cierre de turnos;
 - creacion de sesion activa asociada al turno;
 - allowlist de dominios para sitios autorizados de medicion KPI;
-- modelos `users`, `shifts` y `sessions`;
+- modelos `users`, `shifts`, `sessions` y `allowlist_domains`;
 - capa inicial de servicios, repositorios, enums y excepciones de dominio;
 - migracion inicial con Alembic;
 - script para sembrar un usuario administrador;
-- pruebas unitarias base sobre servicios criticos.
+- pruebas unitarias base sobre servicios criticos;
+- primeras pruebas HTTP sobre permisos y modulo de usuarios.
 
 Pendiente o no implementado aun:
 
@@ -43,7 +45,7 @@ Pendiente o no implementado aun:
 - captura de eventos de actividad;
 - KPIs y reportes historicos;
 - panel de supervision;
-- pruebas de integracion y API;
+- pruebas de integracion con base de datos real;
 - CI/CD, observabilidad y politicas de seguridad mas completas.
 
 ## Stack actual
@@ -84,6 +86,7 @@ kpi_app_v1/
 ### Modulos
 
 - `auth`: login y consulta del usuario autenticado.
+- `users`: gestion administrativa de usuarios, estados y roles.
 - `shifts`: iniciar turno, consultar turno actual y cerrar turno.
 - `allowlist`: administracion de dominios autorizados para captura y medicion de KPIs.
 - `core`: carga de configuracion, JWT, hashing y dependencias compartidas.
@@ -98,6 +101,11 @@ kpi_app_v1/
 - `GET /health`
 - `POST /auth/login`
 - `GET /auth/me`
+- `GET /users`
+- `GET /users/{user_id}`
+- `POST /users`
+- `PATCH /users/{user_id}`
+- `PATCH /users/{user_id}/status`
 - `POST /shifts/start`
 - `GET /shifts/current`
 - `POST /shifts/end`
@@ -108,6 +116,8 @@ kpi_app_v1/
 ### Contratos importantes
 
 - `POST /auth/login` usa `OAuth2PasswordRequestForm`, por lo tanto recibe formulario `application/x-www-form-urlencoded`.
+- `GET /users` y `GET /users/{user_id}` permiten administracion y consulta por `ADMIN` o `SUPERVISOR`.
+- `POST /users`, `PATCH /users/{user_id}` y `PATCH /users/{user_id}/status` quedan reservados para `ADMIN`.
 - `POST /shifts/start` recibe `device_label` opcional.
 - `GET /auth/me`, `GET /shifts/current` y `POST /shifts/end` requieren token Bearer.
 - los endpoints de `allowlist` quedan reservados para administracion.
@@ -213,6 +223,15 @@ curl -X POST "http://127.0.0.1:8000/shifts/start" \
   -H "Authorization: Bearer TU_TOKEN" \
   -H "Content-Type: application/json" \
   -d "{\"device_label\":\"PC-SUP-01\"}"
+```
+
+### Crear usuario
+
+```bash
+curl -X POST "http://127.0.0.1:8000/users" \
+  -H "Authorization: Bearer TU_TOKEN_ADMIN" \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"Ana Perez\",\"email\":\"ana@kpi.com\",\"password\":\"Secreta123\",\"role\":\"SUPERVISOR\",\"is_active\":true}"
 ```
 
 ### Consultar turno actual
@@ -357,10 +376,10 @@ Antes de construir dashboards o monitoreo avanzado, cerrar el MVP operativo con:
 ## Brechas tecnicas identificadas en este analisis
 
 - `frontend/` esta vacio;
-- solo hay pruebas unitarias de servicios; faltan pruebas HTTP e integracion;
+- ya existen pruebas unitarias de servicios y primeras pruebas HTTP, pero faltan pruebas de integracion con persistencia real;
 - no hay `.env.example` en el estado original del repo;
 - `requirements.txt` estaba incompleto y con una dependencia invalida;
-- el control de permisos apenas inicia y por ahora la allowlist es solo para administradores;
+- el control de permisos ya diferencia `ADMIN` y `SUPERVISOR`, pero aun falta definir permisos por modulo futuro;
 - falta modelar la captura real de eventos y la relacion con sitios permitidos;
 - no hay estrategia de logging, monitoreo ni manejo formal de errores operativos.
 
@@ -368,11 +387,11 @@ Antes de construir dashboards o monitoreo avanzado, cerrar el MVP operativo con:
 
 El siguiente hito razonable no es agregar mas endpoints sueltos, sino cerrar un MVP controlable:
 
-1. normalizar dependencias y configuracion;
-2. agregar pruebas;
-3. crear CRUD de usuarios y roles;
-4. definir el frontend minimo;
-5. modelar eventos de actividad antes de pensar en dashboards avanzados.
+1. modelar eventos de actividad ligados a usuario, turno, sesion y dominio permitido;
+2. definir la estrategia de captura web para sitios de la allowlist;
+3. ampliar pruebas de integracion;
+4. definir el frontend minimo para operacion diaria;
+5. avanzar a tableros y KPIs solo con base operativa cerrada.
 
 ## Notas de trabajo
 

@@ -16,6 +16,7 @@ from app.repositories.users import UserRepository
 from app.services.allowlist_domains import AllowlistDomainService
 from app.services.auth import AuthService
 from app.services.shifts import ShiftService
+from app.services.users import UserService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -58,6 +59,10 @@ def get_shift_service(db: Session = Depends(get_db)) -> ShiftService:
 
 def get_allowlist_domain_service(db: Session = Depends(get_db)) -> AllowlistDomainService:
     return AllowlistDomainService(allowlist_repository=AllowlistDomainRepository(db))
+
+
+def get_user_service(db: Session = Depends(get_db)) -> UserService:
+    return UserService(user_repository=UserRepository(db))
 
 
 def require_roles(*roles: UserRole):

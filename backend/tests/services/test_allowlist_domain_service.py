@@ -1,6 +1,10 @@
 import unittest
 from datetime import datetime, timezone
 
+from bootstrap import configure_test_environment
+
+configure_test_environment()
+
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.allowlist_domain import AllowlistDomain
 from app.services.allowlist_domains import AllowlistDomainService
