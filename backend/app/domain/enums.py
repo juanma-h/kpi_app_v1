@@ -15,3 +15,10 @@ class ShiftStatus(StrEnum):
 class SessionStatus(StrEnum):
     OPEN = "OPEN"
     CLOSED = "CLOSED"
+
+
+class ActivityEventType(StrEnum):
+    PAGE_VIEW = "PAGE_VIEW"
+    HEARTBEAT = "HEARTBEAT"
+    IDLE = "IDLE"
+    RESUME = "RESUME"

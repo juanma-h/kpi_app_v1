@@ -11,8 +11,10 @@ from app.db.session import SessionLocal
 from app.domain.enums import UserRole
 from app.models.user import User
 from app.repositories.allowlist_domains import AllowlistDomainRepository
+from app.repositories.activity_events import ActivityEventRepository
 from app.repositories.shift_work import ShiftWorkRepository
 from app.repositories.users import UserRepository
+from app.services.activity_events import ActivityEventService
 from app.services.allowlist_domains import AllowlistDomainService
 from app.services.auth import AuthService
 from app.services.shifts import ShiftService
@@ -59,6 +61,14 @@ def get_shift_service(db: Session = Depends(get_db)) -> ShiftService:
 
 def get_allowlist_domain_service(db: Session = Depends(get_db)) -> AllowlistDomainService:
     return AllowlistDomainService(allowlist_repository=AllowlistDomainRepository(db))
+
+
+def get_activity_event_service(db: Session = Depends(get_db)) -> ActivityEventService:
+    return ActivityEventService(
+        activity_event_repository=ActivityEventRepository(db),
+        shift_work_repository=ShiftWorkRepository(db),
+        allowlist_repository=AllowlistDomainRepository(db),
+    )
 
 
 def get_user_service(db: Session = Depends(get_db)) -> UserService:

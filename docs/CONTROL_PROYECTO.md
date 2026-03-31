@@ -72,6 +72,37 @@ Decisiones tecnicas:
 
 Estado:
 
+- completada y committeada.
+
+## Fase 3 cerrada
+
+Objetivo principal:
+
+- construir el modulo de eventos de actividad web sobre la base de turnos, sesiones y allowlist.
+
+Resultado:
+
+- se incorporo el modelo `activity_events` con relacion a usuario, turno, sesion y dominio permitido;
+- se agrego un servicio dedicado para registrar y consultar eventos de actividad;
+- se incorporo validacion de dominio exacto o subdominio contra la allowlist activa;
+- se restringio el registro de actividad a usuarios con turno y sesion activa;
+- se definieron los tipos de evento iniciales `PAGE_VIEW`, `HEARTBEAT`, `IDLE` y `RESUME`;
+- se agregaron pruebas unitarias del servicio de actividad;
+- se agregaron pruebas HTTP para captura y consulta de actividad segun rol;
+- se documento el contrato tecnico de captura en `docs/CONTRATO_CAPTURA_ACTIVIDAD.md`.
+
+Decisiones tecnicas:
+
+- la ingesta inicial se hace por `POST /activity/events`;
+- el backend resuelve `user_id`, `shift_id` y `session_id` desde el usuario autenticado;
+- solo se aceptan eventos sobre dominios activos de la allowlist;
+- `HEARTBEAT` e `IDLE` requieren `duration_seconds`;
+- `PAGE_VIEW` y `RESUME` no aceptan `duration_seconds`;
+- el empleado puede consultar sus propios eventos y `SUPERVISOR` o `ADMIN` pueden consultar eventos globales;
+- la captura se define como instrumentacion del cliente web autenticado y no como scraping del lado servidor.
+
+Estado:
+
 - completada, validada y lista para commit cuando se decida cerrar el corte actual.
 
 ## Regla documental a partir de ahora
@@ -86,7 +117,7 @@ Al cerrar cada fase se actualizara este documento con:
 
 ## Plan maestro del proyecto
 
-Con la Fase 2 cerrada, el plan completo de:
+Con la Fase 3 cerrada, el plan completo de:
 
 - desarrollo;
 - despliegue;
@@ -99,13 +130,14 @@ Con la Fase 2 cerrada, el plan completo de:
 queda documentado en:
 
 - `docs/PLAN_MAESTRO_PROYECTO.md`
+- `docs/CONTRATO_CAPTURA_ACTIVIDAD.md`
 
 ## Siguiente fase recomendada
 
-- modelado de eventos de actividad web;
-- relacion entre evento, usuario, turno, sesion y dominio permitido;
-- definicion del mecanismo de captura de datos para sitios dentro de la allowlist;
-- primeras consultas base para indicadores operativos.
+- construir KPIs operativos sobre eventos y sesiones;
+- medir tiempo activo, inactividad y trazas basicas por turno;
+- exponer consultas para supervision por usuario, turno y dominio;
+- mantener la analitica apoyada en el contrato de captura ya definido.
 
 ## Regla de calidad minima
 

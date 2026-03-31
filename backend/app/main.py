@@ -4,12 +4,13 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.exceptions import AppError
+from app.routers.activity import router as activity_router
 from app.routers.allowlist import router as allowlist_router
 from app.routers.auth import router as auth_router
 from app.routers.shifts import router as shifts_router
 from app.routers.users import router as users_router
 
-app = FastAPI(title=settings.APP_NAME, version="0.3.0")
+app = FastAPI(title=settings.APP_NAME, version="0.4.0")
 
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
@@ -34,6 +35,7 @@ app.include_router(auth_router)
 app.include_router(shifts_router)
 app.include_router(allowlist_router)
 app.include_router(users_router)
+app.include_router(activity_router)
 
 
 @app.get("/health")

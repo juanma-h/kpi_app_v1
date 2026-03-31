@@ -1,6 +1,6 @@
 # KPI App
 
-Plataforma en desarrollo para la supervision operativa de empleados, control de turnos, sesiones de trabajo y captura futura de indicadores de productividad.
+Plataforma en desarrollo para la supervision operativa de empleados, control de turnos, sesiones de trabajo y captura inicial de actividad para futuros indicadores de productividad.
 
 El repositorio hoy contiene una base backend en FastAPI y el espacio reservado para el frontend. La intencion de este README es dejar claro que existe, que falta y bajo que lineamientos conviene seguir construyendo la aplicacion.
 
@@ -9,6 +9,8 @@ El repositorio hoy contiene una base backend en FastAPI y el espacio reservado p
 La documentacion de seguimiento por fases del proyecto se llevara en:
 
 - `docs/CONTROL_PROYECTO.md`
+- `docs/PLAN_MAESTRO_PROYECTO.md`
+- `docs/CONTRATO_CAPTURA_ACTIVIDAD.md`
 
 ## Objetivo del producto
 
@@ -17,6 +19,7 @@ Construir una aplicacion que permita:
 - autenticar usuarios y diferenciar roles;
 - iniciar, consultar y cerrar turnos de trabajo;
 - registrar sesiones activas por dispositivo o equipo;
+- capturar eventos operativos sobre sitios autorizados;
 - evolucionar hacia supervision basada en eventos, KPIs, alertas y tableros;
 - mantener trazabilidad, control operativo y criterios minimos de privacidad.
 
@@ -31,18 +34,18 @@ Implementado:
 - apertura, consulta y cierre de turnos;
 - creacion de sesion activa asociada al turno;
 - allowlist de dominios para sitios autorizados de medicion KPI;
-- modelos `users`, `shifts`, `sessions` y `allowlist_domains`;
+- captura controlada de eventos de actividad web;
+- modelos `users`, `shifts`, `sessions`, `allowlist_domains` y `activity_events`;
 - capa inicial de servicios, repositorios, enums y excepciones de dominio;
 - migracion inicial con Alembic;
 - script para sembrar un usuario administrador;
 - pruebas unitarias base sobre servicios criticos;
-- primeras pruebas HTTP sobre permisos y modulo de usuarios.
+- pruebas HTTP iniciales sobre permisos, usuarios y actividad.
 
 Pendiente o no implementado aun:
 
 - frontend;
 - CRUD de empleados, supervisores y areas;
-- captura de eventos de actividad;
 - KPIs y reportes historicos;
 - panel de supervision;
 - pruebas de integracion con base de datos real;
@@ -89,6 +92,7 @@ kpi_app_v1/
 - `users`: gestion administrativa de usuarios, estados y roles.
 - `shifts`: iniciar turno, consultar turno actual y cerrar turno.
 - `allowlist`: administracion de dominios autorizados para captura y medicion de KPIs.
+- `activity`: ingesta y consulta inicial de eventos de actividad ligados a turno, sesion y dominio permitido.
 - `core`: carga de configuracion, JWT, hashing y dependencias compartidas.
 - `repositories`: acceso desacoplado a persistencia.
 - `services`: logica de negocio aislada de FastAPI.
@@ -112,6 +116,9 @@ kpi_app_v1/
 - `GET /allowlist/domains`
 - `POST /allowlist/domains`
 - `PATCH /allowlist/domains/{domain_id}/status`
+- `POST /activity/events`
+- `GET /activity/events/me`
+- `GET /activity/events`
 
 ### Contratos importantes
 
@@ -121,6 +128,10 @@ kpi_app_v1/
 - `POST /shifts/start` recibe `device_label` opcional.
 - `GET /auth/me`, `GET /shifts/current` y `POST /shifts/end` requieren token Bearer.
 - los endpoints de `allowlist` quedan reservados para administracion.
+- `POST /activity/events` solo acepta eventos con turno activo, sesion activa y URL `http` o `https` dentro de la allowlist.
+- `HEARTBEAT` e `IDLE` requieren `duration_seconds`; `PAGE_VIEW` y `RESUME` no lo admiten.
+- `GET /activity/events/me` permite al usuario consultar su propia actividad.
+- `GET /activity/events` queda reservado para `ADMIN` y `SUPERVISOR`.
 
 ## Variables de entorno
 
@@ -257,6 +268,22 @@ curl -X POST "http://127.0.0.1:8000/allowlist/domains" \
   -d "{\"domain\":\"https://portal.example.com\",\"description\":\"Portal oficial KPI\"}"
 ```
 
+### Registrar evento de actividad
+
+```bash
+curl -X POST "http://127.0.0.1:8000/activity/events" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"event_type\":\"PAGE_VIEW\",\"source_url\":\"https://portal.example.com/reportes\",\"page_title\":\"Reporte diario\"}"
+```
+
+### Consultar eventos propios
+
+```bash
+curl "http://127.0.0.1:8000/activity/events/me?limit=20" \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
 ## Lineamientos para el desarrollo de la aplicacion
 
 ### 1. Construir por modulos de negocio
@@ -325,7 +352,9 @@ Los primeros tests deberian cubrir:
 - iniciar turno con y sin turno abierto;
 - cerrar turno inexistente;
 - integridad entre turno y sesion;
-- normalizacion y duplicados de la allowlist.
+- normalizacion y duplicados de la allowlist;
+- validacion de actividad fuera de allowlist;
+- registro de actividad solo con turno y sesion activa.
 
 ### 6. Documentar primero el MVP real
 
@@ -357,6 +386,11 @@ Antes de construir dashboards o monitoreo avanzado, cerrar el MVP operativo con:
 - construir vistas para supervisores;
 - agregar filtros por fecha, usuario y equipo.
 
+Estado actual:
+
+- backend de eventos y filtros base ya implementado;
+- vistas web de supervision pendientes.
+
 ### Fase 3. KPIs y alertas
 
 - puntualidad;
@@ -380,18 +414,18 @@ Antes de construir dashboards o monitoreo avanzado, cerrar el MVP operativo con:
 - no hay `.env.example` en el estado original del repo;
 - `requirements.txt` estaba incompleto y con una dependencia invalida;
 - el control de permisos ya diferencia `ADMIN` y `SUPERVISOR`, pero aun falta definir permisos por modulo futuro;
-- falta modelar la captura real de eventos y la relacion con sitios permitidos;
+- ya existe captura controlada de actividad, pero falta convertirla en KPIs, reportes y politicas de retencion automatizadas;
 - no hay estrategia de logging, monitoreo ni manejo formal de errores operativos.
 
 ## Siguiente paso recomendado
 
 El siguiente hito razonable no es agregar mas endpoints sueltos, sino cerrar un MVP controlable:
 
-1. modelar eventos de actividad ligados a usuario, turno, sesion y dominio permitido;
-2. definir la estrategia de captura web para sitios de la allowlist;
-3. ampliar pruebas de integracion;
-4. definir el frontend minimo para operacion diaria;
-5. avanzar a tableros y KPIs solo con base operativa cerrada.
+1. construir KPIs operativos sobre `activity_events`, `sessions` y `shifts`;
+2. ampliar pruebas de integracion con persistencia real;
+3. definir el frontend minimo para operacion diaria;
+4. exponer vistas de supervision sobre actividad y cumplimiento;
+5. avanzar a tableros y alertas sin romper el contrato de captura ya definido.
 
 ## Notas de trabajo
 

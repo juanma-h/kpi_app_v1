@@ -29,15 +29,16 @@ La aplicacion debe permitir:
 
 ## Estado base actual
 
-Completado al cierre de Fase 2:
+Completado al cierre de Fase 3:
 
 - autenticacion JWT;
 - modulo de turnos y sesiones;
 - modulo de usuarios y roles;
 - allowlist inicial de dominios;
+- modulo de eventos de actividad web;
 - separacion por `routers`, `services`, `repositories`, `domain` y `core`;
 - pruebas unitarias de servicios;
-- primeras pruebas HTTP para permisos por rol.
+- pruebas HTTP iniciales por permisos y actividad.
 
 ## Arquitectura objetivo
 
@@ -97,6 +98,10 @@ Entregables:
 
 ## Fase 3. Eventos de actividad
 
+Estado:
+
+- completada.
+
 Objetivo:
 
 - modelar y capturar eventos para sitios permitidos.
@@ -109,12 +114,14 @@ Entregables:
 - endpoints o ingesta controlada;
 - pruebas unitarias e integracion.
 
-Decisiones que deben quedar cerradas en esta fase:
+Decisiones cerradas en esta fase:
 
-- que evento se captura;
-- con que frecuencia;
-- bajo que criterio legal y operativo;
-- desde que agente o mecanismo web se obtendra la informacion.
+- se capturan `PAGE_VIEW`, `HEARTBEAT`, `IDLE` y `RESUME`;
+- `HEARTBEAT` e `IDLE` usan `duration_seconds` y el resto no;
+- el mecanismo inicial de captura se define como instrumentacion del cliente web autenticado;
+- el backend solo acepta eventos sobre dominios activos de la allowlist;
+- el criterio de captura minima y privacidad queda documentado en `docs/CONTRATO_CAPTURA_ACTIVIDAD.md`;
+- la frecuencia recomendada inicial queda cerrada con `HEARTBEAT` cada 60 segundos y transiciones puntuales para `PAGE_VIEW`, `IDLE` y `RESUME`.
 
 ## Fase 4. KPIs operativos
 
@@ -213,13 +220,20 @@ Si no se usa Docker en la primera etapa, al menos debe existir:
 
 ## Politica de captura de actividad
 
-Antes de instrumentar captura de datos desde sitios web, debe definirse:
+La captura base de actividad queda definida por:
 
-- alcance exacto de la informacion recolectada;
+- `docs/CONTRATO_CAPTURA_ACTIVIDAD.md`;
+- alcance minimo de informacion operativa;
+- validacion estricta contra allowlist;
+- restriccion por turno y sesion activa;
+- acceso por rol a consultas globales.
+
+Antes de pasar a produccion formal debe cerrarse ademas:
+
 - base legal o politica interna aplicable;
-- usuarios autorizados a consultar/exportar esos datos;
-- tiempo de retencion;
-- criterios de anonimizacion si aplica.
+- tiempo de retencion definitivo;
+- criterio de exportacion y auditoria;
+- automatizacion de purga o archivado si aplica.
 
 ## Operacion y monitoreo
 
@@ -312,9 +326,9 @@ Toda decision de arquitectura, despliegue o captura de datos que cambie el alcan
 
 ## Siguiente hito recomendado
 
-El siguiente hito despues de Fase 2 es:
+El siguiente hito despues de Fase 3 es:
 
-- construir el modulo de eventos de actividad;
-- definir el contrato tecnico de captura web;
-- relacionar cada evento con la allowlist de dominios;
-- preparar la base para KPIs reales sin improvisar la ingesta de datos.
+- construir consultas y agregaciones de KPIs operativos;
+- medir actividad, inactividad y continuidad por turno;
+- preparar endpoints de supervision sobre la base de eventos ya capturados;
+- mantener la ingesta estable y sin ampliar alcance invasivo.
