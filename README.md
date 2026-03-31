@@ -4,6 +4,12 @@ Plataforma en desarrollo para la supervision operativa de empleados, control de 
 
 El repositorio hoy contiene una base backend en FastAPI y el espacio reservado para el frontend. La intencion de este README es dejar claro que existe, que falta y bajo que lineamientos conviene seguir construyendo la aplicacion.
 
+## Documentacion de control
+
+La documentacion de seguimiento por fases del proyecto se llevara en:
+
+- `docs/CONTROL_PROYECTO.md`
+
 ## Objetivo del producto
 
 Construir una aplicacion que permita:
