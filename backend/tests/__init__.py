@@ -1,1 +1,1 @@
-# Test package marker for unittest discovery.
+# Test package marker for stable module-based unittest execution.

@@ -29,13 +29,14 @@ La aplicacion debe permitir:
 
 ## Estado base actual
 
-Completado al cierre de Fase 4:
+Completado al cierre de Subfase 4.1:
 
 - autenticacion JWT;
 - modulo de turnos y sesiones;
 - modulo de usuarios y roles;
 - allowlist inicial de dominios;
 - modulo de eventos de actividad web;
+- modulo de novedades ecommerce y bitacora diaria;
 - separacion por `routers`, `services`, `repositories`, `domain` y `core`;
 - pruebas unitarias de servicios;
 - pruebas HTTP iniciales por permisos y actividad.
@@ -148,11 +149,33 @@ Avance actual:
 - la puntualidad ya se calcula sobre horarios asignados, turnos reales y tolerancia;
 - todavia no existen alertas operativas ni materializacion analitica.
 
+## Subfase 4.1. Novedades ecommerce
+
+Estado:
+
+- completada.
+
+Objetivo:
+
+- incorporar el dominio de novedades operativas del ecommerce antes del frontend.
+
+Entregables:
+
+- catalogos `operational_areas` y `source_systems`;
+- modulo `novelties` con estado, prioridad, referencias externas y asignacion;
+- bitacora diaria `novelty_logs` con tiempo trabajado;
+- endpoints de consulta personal y global;
+- KPIs iniciales de novedades por usuario y vista global.
+
+Soporte documental:
+
+- `docs/CONTRATO_NOVEDADES_ECOMMERCE.md`
+
 ## Fase 5. Frontend operativo
 
 Objetivo:
 
-- habilitar uso web real para empleados y supervisores.
+- habilitar uso web real para empleados y supervisores sobre turnos, horarios, actividad y novedades.
 
 Entregables:
 
@@ -341,5 +364,5 @@ Toda decision de arquitectura, despliegue o captura de datos que cambie el alcan
 El siguiente hito despues de Fase 4 es:
 
 - habilitar el frontend operativo para empleados y supervisores;
-- consumir los endpoints de turnos, usuarios, dominios, horarios y KPIs desde interfaz web;
+- consumir los endpoints de turnos, usuarios, dominios, horarios, novedades y KPIs desde interfaz web;
 - mantener alertas y supervision avanzada como evolucion posterior sobre esa base.

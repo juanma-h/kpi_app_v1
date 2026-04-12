@@ -1,7 +1,7 @@
 import unittest
 from datetime import date, datetime, time, timedelta, timezone
 
-from bootstrap import configure_test_environment
+from tests.bootstrap import configure_test_environment
 
 configure_test_environment()
 

@@ -136,6 +136,38 @@ Estado:
 
 - completada y committeada.
 
+## Subfase 4.1 cerrada
+
+Objetivo principal:
+
+- incorporar el dominio de novedades ecommerce antes de iniciar el frontend operativo.
+
+Resultado:
+
+- se incorporaron catalogos de `operational_areas` y `source_systems` para modelar equipos y sistemas como Vendelo;
+- se agrego el modulo `novelties` con alta, consulta, edicion, asignacion y cambio de estado;
+- se agrego la bitacora diaria `novelty_logs` para documentar gestion por caso y minutos trabajados;
+- se vinculo la novedad con usuario reportante, usuario asignado, turno y sesion cuando existe contexto operativo;
+- se agregaron KPIs iniciales de novedades por usuario y vista global;
+- se incorporaron pruebas unitarias y HTTP del nuevo modulo.
+
+Decisiones tecnicas:
+
+- el modulo se implementa como capa generica de novedades operativas, no acoplada exclusivamente a Vendelo;
+- Vendelo entra como `source_system` y puede vincularse a la allowlist existente;
+- `EMPLOYEE` puede registrar novedades, consultar sus propias novedades o asignadas y documentar bitacora;
+- `SUPERVISOR` y `ADMIN` pueden consultar vistas globales y KPIs de novedades;
+- `ADMIN` administra catalogos operativos y puede cambiar estados o asignaciones sin limitar el modulo a un solo sistema fuente;
+- la reapertura de novedades cerradas se deja fuera de esta iteracion para no introducir flujo incompleto sin reglas de auditoria.
+
+Estado:
+
+- completada, validada y lista para commit cuando se decida cerrar el corte actual.
+
+Documentacion operativa asociada:
+
+- `docs/CONTRATO_NOVEDADES_ECOMMERCE.md`
+
 ## Regla documental a partir de ahora
 
 Al cerrar cada fase se actualizara este documento con:
@@ -162,12 +194,13 @@ queda documentado en:
 
 - `docs/PLAN_MAESTRO_PROYECTO.md`
 - `docs/CONTRATO_CAPTURA_ACTIVIDAD.md`
+- `docs/CONTRATO_NOVEDADES_ECOMMERCE.md`
 
 ## Siguiente fase recomendada
 
-- construir el frontend operativo sobre los modulos ya cerrados;
-- exponer vistas web de supervision sobre actividad, cumplimiento y horarios;
-- definir alertas operativas sobre inactividad o baja cobertura;
+- construir el frontend operativo sobre los modulos ya cerrados, incluyendo novedades ecommerce;
+- exponer vistas web de supervision sobre actividad, cumplimiento, horarios y backlog de novedades;
+- definir alertas operativas sobre inactividad, baja cobertura y acumulacion de novedades;
 - ampliar pruebas de integracion con persistencia real.
 
 ## Regla de calidad minima

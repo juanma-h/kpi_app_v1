@@ -12,6 +12,7 @@ from app.domain.enums import UserRole
 from app.models.user import User
 from app.repositories.activity_events import ActivityEventRepository
 from app.repositories.allowlist_domains import AllowlistDomainRepository
+from app.repositories.novelties import NoveltyRepository
 from app.repositories.operational_kpis import OperationalKpiRepository
 from app.repositories.schedules import ScheduleRepository
 from app.repositories.shift_work import ShiftWorkRepository
@@ -19,6 +20,8 @@ from app.repositories.users import UserRepository
 from app.services.activity_events import ActivityEventService
 from app.services.allowlist_domains import AllowlistDomainService
 from app.services.auth import AuthService
+from app.services.novelty_kpis import NoveltyKpiService
+from app.services.novelties import NoveltyService
 from app.services.operational_kpis import OperationalKpiService
 from app.services.schedules import ScheduleService
 from app.services.shifts import ShiftService
@@ -88,6 +91,17 @@ def get_schedule_service(db: Session = Depends(get_db)) -> ScheduleService:
 
 def get_user_service(db: Session = Depends(get_db)) -> UserService:
     return UserService(user_repository=UserRepository(db))
+
+
+def get_novelty_service(db: Session = Depends(get_db)) -> NoveltyService:
+    return NoveltyService(
+        novelty_repository=NoveltyRepository(db),
+        shift_work_repository=ShiftWorkRepository(db),
+    )
+
+
+def get_novelty_kpi_service(db: Session = Depends(get_db)) -> NoveltyKpiService:
+    return NoveltyKpiService(novelty_repository=NoveltyRepository(db))
 
 
 def require_roles(*roles: UserRole):

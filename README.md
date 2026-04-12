@@ -11,6 +11,9 @@ La documentacion de seguimiento por fases del proyecto se llevara en:
 - `docs/CONTROL_PROYECTO.md`
 - `docs/PLAN_MAESTRO_PROYECTO.md`
 - `docs/CONTRATO_CAPTURA_ACTIVIDAD.md`
+- `docs/CONTRATO_NOVEDADES_ECOMMERCE.md`
+- `docs/ARQUITECTURA_FRONTEND.md`
+- `docs/PROMPTS_PENCIL_FRONTEND.md`
 
 ## Objetivo del producto
 
@@ -20,6 +23,8 @@ Construir una aplicacion que permita:
 - iniciar, consultar y cerrar turnos de trabajo;
 - registrar sesiones activas por dispositivo o equipo;
 - capturar eventos operativos sobre sitios autorizados;
+- gestionar novedades operativas de ecommerce sobre sistemas como Vendelo;
+- documentar bitacoras diarias de gestion por caso;
 - evolucionar hacia supervision basada en eventos, KPIs, alertas y tableros;
 - mantener trazabilidad, control operativo y criterios minimos de privacidad.
 
@@ -36,7 +41,9 @@ Implementado:
 - allowlist de dominios para sitios autorizados de medicion KPI;
 - captura controlada de eventos de actividad web;
 - plantillas de horario y asignaciones por usuario;
-- modelos `users`, `shifts`, `sessions`, `allowlist_domains`, `activity_events`, `schedule_templates` y `user_schedule_assignments`;
+- catalogos operativos para areas y sistemas fuente;
+- modulo de novedades ecommerce con bitacora diaria y KPIs iniciales;
+- modelos `users`, `shifts`, `sessions`, `allowlist_domains`, `activity_events`, `schedule_templates`, `user_schedule_assignments`, `operational_areas`, `source_systems`, `novelties` y `novelty_logs`;
 - capa inicial de servicios, repositorios, enums y excepciones de dominio;
 - migracion inicial con Alembic;
 - script para sembrar un usuario administrador;
@@ -50,6 +57,7 @@ Pendiente o no implementado aun:
 - KPIs y reportes historicos;
 - panel de supervision;
 - pruebas de integracion con base de datos real;
+- integracion real con APIs externas de Vendelo u otros sistemas fuente;
 - CI/CD, observabilidad y politicas de seguridad mas completas.
 
 ## Stack actual
@@ -96,6 +104,7 @@ kpi_app_v1/
 - `activity`: ingesta y consulta inicial de eventos de actividad ligados a turno, sesion y dominio permitido.
 - `kpis`: consultas operativas sobre actividad, sesiones y turnos para empleados y supervisores.
 - `schedules`: plantillas de horario, asignaciones por usuario y resolucion del horario esperado por fecha.
+- `novelties`: catalogos operativos, novedades ecommerce, bitacora diaria y KPIs de gestion.
 - `core`: carga de configuracion, JWT, hashing y dependencias compartidas.
 - `repositories`: acceso desacoplado a persistencia.
 - `services`: logica de negocio aislada de FastAPI.
@@ -135,6 +144,24 @@ kpi_app_v1/
 - `POST /schedules/assignments`
 - `GET /schedules/me/resolved`
 - `GET /schedules/users/{user_id}/resolved`
+- `GET /novelties/areas`
+- `POST /novelties/areas`
+- `PATCH /novelties/areas/{area_id}/status`
+- `GET /novelties/source-systems`
+- `POST /novelties/source-systems`
+- `PATCH /novelties/source-systems/{source_system_id}/status`
+- `GET /novelties/me`
+- `GET /novelties`
+- `POST /novelties`
+- `GET /novelties/{novelty_id}`
+- `PATCH /novelties/{novelty_id}`
+- `PATCH /novelties/{novelty_id}/assignment`
+- `PATCH /novelties/{novelty_id}/status`
+- `GET /novelties/{novelty_id}/logs`
+- `POST /novelties/{novelty_id}/logs`
+- `GET /novelties/kpis/me`
+- `GET /novelties/kpis/overview`
+- `GET /novelties/kpis/users/{user_id}`
 
 ### Contratos importantes
 
@@ -154,6 +181,14 @@ kpi_app_v1/
 - `POST /schedules/templates`, `PATCH /schedules/templates/{template_id}`, `PATCH /schedules/templates/{template_id}/status` y `POST /schedules/assignments` quedan reservados para `ADMIN`.
 - `GET /schedules/templates`, `GET /schedules/assignments` y `GET /schedules/users/{user_id}/resolved` pueden ser consultados por `ADMIN` y `SUPERVISOR`.
 - `GET /schedules/me/resolved` permite al usuario autenticado consultar su horario esperado para una fecha.
+- `POST /novelties` permite registrar una novedad operativa ligada a un area y un sistema fuente.
+- `GET /novelties/areas` y `GET /novelties/source-systems` exponen catalogos activos a cualquier usuario autenticado para soportar el alta de novedades desde el frontend.
+- `ADMIN` y `SUPERVISOR` pueden usar esos mismos catalogos con filtro completo, incluyendo registros inactivos.
+- `GET /novelties/me` expone las novedades propias o asignadas al usuario autenticado.
+- `GET /novelties` queda reservado para `ADMIN` y `SUPERVISOR`.
+- `POST /novelties/areas`, `PATCH /novelties/areas/{area_id}/status`, `POST /novelties/source-systems` y `PATCH /novelties/source-systems/{source_system_id}/status` quedan reservados para `ADMIN`.
+- `POST /novelties/{novelty_id}/logs` permite documentar bitacora diaria de gestion, con minutos trabajados y cambio de estado opcional.
+- `GET /novelties/kpis/me` expone KPIs personales de gestion de novedades y las vistas globales o por usuario quedan reservadas para `ADMIN` y `SUPERVISOR`.
 
 ## Variables de entorno
 
@@ -336,6 +371,31 @@ curl "http://127.0.0.1:8000/schedules/me/resolved?target_date=2026-04-01" \
   -H "Authorization: Bearer TU_TOKEN"
 ```
 
+### Crear novedad operativa
+
+```bash
+curl -X POST "http://127.0.0.1:8000/novelties" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"area_id\":1,\"source_system_id\":1,\"assigned_user_id\":2,\"external_reference\":\"VDL-200\",\"order_reference\":\"ORD-200\",\"title\":\"Pedido con novedad de pago\",\"description\":\"El pedido requiere validacion manual en Vendelo y seguimiento diario.\",\"novelty_type\":\"PAGO\",\"priority\":\"HIGH\",\"extra_data\":{\"canal\":\"vendelo\"}}"
+```
+
+### Registrar bitacora diaria de una novedad
+
+```bash
+curl -X POST "http://127.0.0.1:8000/novelties/1/logs" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"work_date\":\"2026-04-11\",\"log_type\":\"DAILY_UPDATE\",\"content\":\"Se contacta al operador y se deja gestion documentada.\",\"worked_minutes\":25,\"status_after\":\"IN_PROGRESS\"}"
+```
+
+### Consultar KPIs propios de novedades
+
+```bash
+curl "http://127.0.0.1:8000/novelties/kpis/me" \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
 ## Lineamientos para el desarrollo de la aplicacion
 
 ### 1. Construir por modulos de negocio
@@ -344,6 +404,7 @@ Cada capacidad nueva deberia entrar como modulo completo, no como endpoint aisla
 
 - empleados;
 - supervisores;
+- novedades ecommerce;
 - eventos de actividad;
 - alertas;
 - reportes;
@@ -364,7 +425,7 @@ Cada modulo nuevo deberia incluir:
 La app va a necesitar dos capas:
 
 - capa transaccional: usuarios, turnos, sesiones, eventos;
-- capa analitica: KPIs, productividad, reportes y tendencias.
+- capa analitica: KPIs, productividad, novedades, reportes y tendencias.
 
 No mezclar consultas operativas con agregaciones complejas en el mismo punto de crecimiento.
 
@@ -475,6 +536,7 @@ Estado actual:
 - el control de permisos ya diferencia `ADMIN` y `SUPERVISOR`, pero aun falta definir permisos por modulo futuro;
 - ya existe captura controlada de actividad, pero falta convertirla en KPIs, reportes y politicas de retencion automatizadas;
 - ya existe una base de KPIs operativos y horarios con puntualidad real, pero aun faltan alertas y supervision web;
+- ya existe una base para novedades ecommerce y bitacora diaria, pero aun falta integracion real con sistemas externos y dashboards web de esta operacion;
 - no hay estrategia de logging, monitoreo ni manejo formal de errores operativos.
 
 ## Siguiente paso recomendado
@@ -482,10 +544,10 @@ Estado actual:
 El siguiente hito razonable no es agregar mas endpoints sueltos, sino cerrar un MVP controlable:
 
 1. construir KPIs operativos sobre `activity_events`, `sessions` y `shifts`;
-2. ampliar pruebas de integracion con persistencia real;
-3. definir el frontend minimo para operacion diaria;
-4. exponer vistas de supervision sobre actividad, cumplimiento y horarios;
-5. avanzar a alertas operativas y tableros web sobre la base ya cerrada.
+2. consolidar el modulo de novedades ecommerce y llevarlo al frontend operativo;
+3. ampliar pruebas de integracion con persistencia real;
+4. definir el frontend minimo para operacion diaria;
+5. exponer vistas de supervision sobre actividad, cumplimiento, horarios y novedades.
 
 ## Notas de trabajo
 

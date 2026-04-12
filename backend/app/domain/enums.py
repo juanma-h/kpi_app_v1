@@ -32,3 +32,26 @@ class Weekday(StrEnum):
     FRIDAY = "FRIDAY"
     SATURDAY = "SATURDAY"
     SUNDAY = "SUNDAY"
+
+
+class NoveltyPriority(StrEnum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class NoveltyStatus(StrEnum):
+    OPEN = "OPEN"
+    IN_PROGRESS = "IN_PROGRESS"
+    BLOCKED = "BLOCKED"
+    RESOLVED = "RESOLVED"
+    CLOSED = "CLOSED"
+
+
+class NoveltyLogType(StrEnum):
+    DAILY_UPDATE = "DAILY_UPDATE"
+    STATUS_CHANGE = "STATUS_CHANGE"
+    ASSIGNMENT = "ASSIGNMENT"
+    COMMENT = "COMMENT"
+    RESOLUTION = "RESOLUTION"

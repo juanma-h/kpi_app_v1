@@ -8,11 +8,12 @@ from app.routers.activity import router as activity_router
 from app.routers.allowlist import router as allowlist_router
 from app.routers.auth import router as auth_router
 from app.routers.kpis import router as kpis_router
+from app.routers.novelties import router as novelties_router
 from app.routers.schedules import router as schedules_router
 from app.routers.shifts import router as shifts_router
 from app.routers.users import router as users_router
 
-app = FastAPI(title=settings.APP_NAME, version="0.6.0")
+app = FastAPI(title=settings.APP_NAME, version="0.7.0")
 
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
@@ -40,6 +41,7 @@ app.include_router(users_router)
 app.include_router(activity_router)
 app.include_router(kpis_router)
 app.include_router(schedules_router)
+app.include_router(novelties_router)
 
 
 @app.get("/health")

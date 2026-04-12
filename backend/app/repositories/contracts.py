@@ -5,10 +5,14 @@ from typing import Any, Protocol, Sequence
 
 from app.models.activity_event import ActivityEvent
 from app.models.allowlist_domain import AllowlistDomain
+from app.models.novelty import Novelty
+from app.models.novelty_log import NoveltyLog
+from app.models.operational_area import OperationalArea
 from app.models.schedule_template import ScheduleTemplate
 from app.models.schedule_template_slot import ScheduleTemplateSlot
 from app.models.session import Session as WorkSession
 from app.models.shift import Shift
+from app.models.source_system import SourceSystem
 from app.models.user_schedule_assignment import UserScheduleAssignment
 from app.models.user import User
 
@@ -189,6 +193,113 @@ class ScheduleRepositoryProtocol(Protocol):
         notes: str | None,
         assigned_by_user_id: int | None,
     ) -> UserScheduleAssignment: ...
+
+    def get_user_by_id(self, user_id: int) -> User | None: ...
+
+    def commit(self) -> None: ...
+
+    def refresh(self, instance: Any) -> None: ...
+
+
+class NoveltyRepositoryProtocol(Protocol):
+    def list_areas(self, *, is_active: bool | None = None) -> Sequence[OperationalArea]: ...
+
+    def get_area_by_id(self, area_id: int) -> OperationalArea | None: ...
+
+    def get_area_by_code(self, code: str) -> OperationalArea | None: ...
+
+    def get_area_by_name(self, name: str) -> OperationalArea | None: ...
+
+    def create_area(
+        self,
+        *,
+        code: str,
+        name: str,
+        description: str | None,
+        is_active: bool,
+        created_by_user_id: int | None,
+    ) -> OperationalArea: ...
+
+    def list_source_systems(self, *, is_active: bool | None = None) -> Sequence[SourceSystem]: ...
+
+    def get_source_system_by_id(self, source_system_id: int) -> SourceSystem | None: ...
+
+    def get_source_system_by_code(self, code: str) -> SourceSystem | None: ...
+
+    def get_source_system_by_name(self, name: str) -> SourceSystem | None: ...
+
+    def create_source_system(
+        self,
+        *,
+        code: str,
+        name: str,
+        description: str | None,
+        allowlist_domain_id: int | None,
+        is_active: bool,
+        created_by_user_id: int | None,
+    ) -> SourceSystem: ...
+
+    def get_allowlist_domain_by_id(self, allowlist_domain_id: int) -> AllowlistDomain | None: ...
+
+    def list_novelties(
+        self,
+        *,
+        involved_user_id: int | None = None,
+        area_id: int | None = None,
+        source_system_id: int | None = None,
+        assigned_user_id: int | None = None,
+        reported_by_user_id: int | None = None,
+        status: str | None = None,
+        priority: str | None = None,
+        novelty_type: str | None = None,
+        reported_from: datetime | None = None,
+        reported_to: datetime | None = None,
+        limit: int | None = 200,
+    ) -> Sequence[Novelty]: ...
+
+    def get_novelty_by_id(self, novelty_id: int) -> Novelty | None: ...
+
+    def create_novelty(
+        self,
+        *,
+        area_id: int,
+        source_system_id: int,
+        reported_by_user_id: int,
+        assigned_user_id: int | None,
+        reported_shift_id: int | None,
+        reported_session_id: int | None,
+        external_reference: str | None,
+        order_reference: str | None,
+        customer_reference: str | None,
+        title: str,
+        description: str,
+        novelty_type: str,
+        priority: str,
+        status: str,
+        extra_data: dict[str, Any] | None,
+        reported_at: datetime,
+    ) -> Novelty: ...
+
+    def list_logs(self, *, novelty_id: int) -> Sequence[NoveltyLog]: ...
+
+    def list_logs_for_novelties(self, *, novelty_ids: Sequence[int]) -> Sequence[NoveltyLog]: ...
+
+    def get_log_by_id(self, log_id: int) -> NoveltyLog | None: ...
+
+    def create_log(
+        self,
+        *,
+        novelty_id: int,
+        author_user_id: int,
+        shift_id: int | None,
+        session_id: int | None,
+        work_date: date,
+        log_type: str,
+        content: str,
+        worked_minutes: int | None,
+        status_after: str | None,
+        logged_at: datetime,
+    ) -> NoveltyLog: ...
 
     def get_user_by_id(self, user_id: int) -> User | None: ...
 

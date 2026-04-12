@@ -1,6 +1,6 @@
 import unittest
 
-from bootstrap import configure_test_environment
+from tests.bootstrap import configure_test_environment
 
 configure_test_environment()
 
