@@ -9,6 +9,7 @@ venv/
 # Environment files
 backend/.env
 frontend/.env
+.env
 
 # Test and tooling caches
 .pytest_cache/
