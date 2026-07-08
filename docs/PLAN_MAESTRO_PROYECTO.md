@@ -173,6 +173,10 @@ Soporte documental:
 
 ## Fase 5. Frontend operativo
 
+Estado:
+
+- completada.
+
 Objetivo:
 
 - habilitar uso web real para empleados y supervisores sobre turnos, horarios, actividad y novedades.
@@ -184,6 +188,12 @@ Entregables:
 - panel administrativo para usuarios y dominios;
 - vistas de supervision basadas en KPIs;
 - control de acceso por rol.
+
+Avance actual:
+
+- se construyo el frontend en React 19 + TypeScript + Vite + Tailwind CSS v4, consumiendo todos los modulos backend cerrados (turnos, horarios, actividad, KPIs, novedades, usuarios y allowlist);
+- se implementaron las tres experiencias por rol (`EMPLOYEE`, `SUPERVISOR`, `ADMIN`) con guards de autenticacion y de rol;
+- todavia no existen pruebas automatizadas de frontend ni alertas operativas; quedan para la Fase 6.
 
 ## Fase 6. Operacion y gobierno
 
@@ -361,8 +371,8 @@ Toda decision de arquitectura, despliegue o captura de datos que cambie el alcan
 
 ## Siguiente hito recomendado
 
-El siguiente hito despues de Fase 4 es:
+Con la Fase 5 cerrada, el siguiente hito es la Fase 6:
 
-- habilitar el frontend operativo para empleados y supervisores;
-- consumir los endpoints de turnos, usuarios, dominios, horarios, novedades y KPIs desde interfaz web;
-- mantener alertas y supervision avanzada como evolucion posterior sobre esa base.
+- definir alertas operativas sobre inactividad, baja cobertura y acumulacion de novedades;
+- incorporar auditoria, exportaciones y observabilidad;
+- ampliar pruebas de integracion con persistencia real y agregar pruebas automatizadas de frontend.

@@ -168,6 +168,43 @@ Documentacion operativa asociada:
 
 - `docs/CONTRATO_NOVEDADES_ECOMMERCE.md`
 
+## Fase 5 cerrada
+
+Objetivo principal:
+
+- construir el frontend operativo sobre los modulos ya cerrados del backend (turnos, horarios, actividad, KPIs, novedades, usuarios y allowlist).
+
+Resultado:
+
+- se creo la aplicacion en `frontend/` con React 19, TypeScript, Vite, Tailwind CSS v4, React Router y TanStack Query;
+- se definio un sistema de diseno oscuro con acentos degradados, componentes reutilizables (`Button`, `Badge`, `Card`, `DataTable`, `Form`, `Modal`, `Tabs`, iconografia propia) y una paleta de graficos validada con el criterio de accesibilidad del equipo;
+- se implemento autenticacion (login, sesion persistida, guard por autenticacion y por rol) y un `AppShell` con sidebar por rol y topbar;
+- se construyo la experiencia de `EMPLOYEE`: dashboard propio, turno (iniciar/cerrar con detalle en vivo), horario resuelto por fecha, actividad reciente, KPIs personales con graficos y novedades propias/asignadas con bitacora;
+- se construyo la experiencia de `SUPERVISOR`: equipo hoy, KPIs de equipo, turnos de hoy, actividad del equipo, horarios (consulta) y novedades globales, ademas del detalle por empleado;
+- se construyo la experiencia de `ADMIN`: administracion de usuarios, dominios permitidos, plantillas y asignaciones de horario, y catalogos operativos (areas y sistemas fuente), sumado a todo lo de `SUPERVISOR`;
+- se probo el flujo completo contra el backend real (login, inicio/cierre de turno, creacion de usuario, dominio, plantilla de horario, asignacion, area operativa, sistema fuente, novedad y entrada de bitacora) usando un navegador headless.
+
+Decisiones tecnicas:
+
+- la vista "Equipo hoy" y "KPIs del equipo" combinan `GET /users` con `GET /kpis/users/{id}/overview` por usuario en paralelo; es valido para equipos pequenos o medianos y queda identificado como candidato a un endpoint agregado si el equipo crece;
+- los filtros de fecha del frontend siempre se envian en ISO 8601 con zona horaria porque el backend rechaza fechas sin offset;
+- `GET /kpis/shifts/{shift_id}` es exclusivo de `ADMIN`/`SUPERVISOR`, asi que la vista "Mi turno" del empleado usa `GET /kpis/me/overview` acotado a la fecha de inicio del turno abierto en su lugar;
+- la creacion de novedades y la bitacora quedan disponibles para cualquier usuario autenticado; la reasignacion de novedades queda restringida a `ADMIN`/`SUPERVISOR` en el frontend, en linea con el permiso ya existente en el backend.
+
+Riesgos o limitaciones:
+
+- el frontend aun no tiene pruebas automatizadas propias (unitarias o end-to-end);
+- la resolucion de KPIs por equipo mediante multiples consultas paralelas puede degradar con equipos grandes;
+- las alertas operativas siguen sin implementarse, tanto en backend como en frontend.
+
+Estado:
+
+- completada y lista para commit.
+
+Siguiente fase recomendada:
+
+- Fase 6, gobierno y escalado: auditoria, exportaciones, observabilidad y alertas operativas.
+
 ## Regla documental a partir de ahora
 
 Al cerrar cada fase se actualizara este documento con:
@@ -198,10 +235,9 @@ queda documentado en:
 
 ## Siguiente fase recomendada
 
-- construir el frontend operativo sobre los modulos ya cerrados, incluyendo novedades ecommerce;
-- exponer vistas web de supervision sobre actividad, cumplimiento, horarios y backlog de novedades;
 - definir alertas operativas sobre inactividad, baja cobertura y acumulacion de novedades;
-- ampliar pruebas de integracion con persistencia real.
+- ampliar pruebas de integracion con persistencia real y agregar pruebas automatizadas de frontend;
+- evaluar un endpoint agregado de KPIs por equipo si el numero de empleados crece de forma relevante.
 
 ## Regla de calidad minima
 

@@ -2,7 +2,7 @@
 
 Plataforma en desarrollo para la supervision operativa de empleados, control de turnos, sesiones de trabajo y captura inicial de actividad para futuros indicadores de productividad.
 
-El repositorio hoy contiene una base backend en FastAPI y el espacio reservado para el frontend. La intencion de este README es dejar claro que existe, que falta y bajo que lineamientos conviene seguir construyendo la aplicacion.
+El repositorio contiene una base backend en FastAPI y un frontend operativo en React que consume esos endpoints. La intencion de este README es dejar claro que existe, que falta y bajo que lineamientos conviene seguir construyendo la aplicacion.
 
 ## Documentacion de control
 
@@ -50,13 +50,14 @@ Implementado:
 - pruebas unitarias base sobre servicios criticos;
 - pruebas HTTP iniciales sobre permisos, usuarios y actividad.
 
+- frontend operativo en React con autenticacion, dashboard por rol, turnos, horario, actividad, KPIs, novedades y panel administrativo (usuarios, allowlist, horarios, catalogos).
+
 Pendiente o no implementado aun:
 
-- frontend;
-- CRUD de empleados, supervisores y areas;
-- KPIs y reportes historicos;
-- panel de supervision;
+- KPIs y reportes historicos mas alla del rango consultable actual;
+- alertas operativas automaticas;
 - pruebas de integracion con base de datos real;
+- pruebas automatizadas de frontend;
 - integracion real con APIs externas de Vendelo u otros sistemas fuente;
 - CI/CD, observabilidad y politicas de seguridad mas completas.
 
@@ -89,7 +90,16 @@ kpi_app_v1/
 |   |-- .env.example
 |   |-- tests/
 |   `-- requirements.txt
-|-- frontend/            # reservado para la interfaz, aun sin implementacion
+|-- frontend/
+|   |-- src/
+|   |   |-- app/          # router, guards por rol, layout (sidebar/topbar)
+|   |   |-- modules/      # auth, dashboard, shifts, schedules, activity, kpis, novelties, supervisor, admin
+|   |   |-- components/ui/# kit de UI (Button, Badge, Card, DataTable, Form, Modal, Tabs, iconos)
+|   |   |-- components/charts/ # graficos (Recharts) para desgloses de KPIs
+|   |   |-- lib/api/      # cliente HTTP (axios) por dominio
+|   |   |-- lib/session/  # contexto de autenticacion
+|   |   `-- types/        # tipos alineados a los esquemas Pydantic del backend
+|   `-- package.json
 `-- README.md
 ```
 
@@ -189,6 +199,43 @@ kpi_app_v1/
 - `POST /novelties/areas`, `PATCH /novelties/areas/{area_id}/status`, `POST /novelties/source-systems` y `PATCH /novelties/source-systems/{source_system_id}/status` quedan reservados para `ADMIN`.
 - `POST /novelties/{novelty_id}/logs` permite documentar bitacora diaria de gestion, con minutos trabajados y cambio de estado opcional.
 - `GET /novelties/kpis/me` expone KPIs personales de gestion de novedades y las vistas globales o por usuario quedan reservadas para `ADMIN` y `SUPERVISOR`.
+
+## Frontend actual
+
+### Stack
+
+- React 19 + TypeScript + Vite;
+- Tailwind CSS v4 (tema oscuro con acentos degradados, tokens de color en `src/index.css`);
+- React Router para navegacion y guards por autenticacion/rol;
+- TanStack Query para datos remotos, cache y mutaciones;
+- Recharts para los desgloses de KPIs;
+- axios como cliente HTTP con interceptor de token y manejo central de errores.
+
+### Experiencia por rol
+
+- `EMPLOYEE`: dashboard propio, turno, horario, actividad, KPIs personales y novedades propias/asignadas.
+- `SUPERVISOR`: equipo hoy, KPIs de equipo, turnos de hoy, actividad del equipo, horarios (consulta) y novedades globales.
+- `ADMIN`: todo lo anterior mas administracion de usuarios, dominios permitidos, plantillas/asignaciones de horario y catalogos operativos (areas y sistemas fuente).
+
+El detalle de rutas por rol sigue lo definido en `docs/ARQUITECTURA_FRONTEND.md`.
+
+### Puesta en marcha local (frontend)
+
+```powershell
+cd frontend
+npm install
+Copy-Item .env.example .env
+npm run dev
+```
+
+`frontend/.env` define `VITE_API_URL` (por defecto `http://localhost:8000`). El backend debe tener `BACKEND_CORS_ORIGINS` incluyendo el origen del frontend (por defecto `http://localhost:5173`) en `backend/.env`.
+
+### Decisiones tecnicas
+
+- se prioriza cobertura funcional de los modulos ya cerrados del backend (turnos, horarios, actividad, KPIs, novedades, usuarios, allowlist) antes que analitica avanzada;
+- la vista "Equipo hoy" y "KPIs del equipo" combinan `GET /users` con `GET /kpis/users/{id}/overview` por usuario (aceptable para equipos pequenos/medianos; si el equipo crece de forma significativa conviene un endpoint agregado en backend);
+- los filtros de fecha (`started_from`/`started_to`) siempre se envian con zona horaria (ISO 8601 con offset) porque el backend los exige asi;
+- `GET /kpis/shifts/{shift_id}` es exclusivo de `ADMIN`/`SUPERVISOR`; la vista "Mi turno" del empleado usa `GET /kpis/me/overview` acotado a la fecha de inicio del turno abierto para mostrar el mismo tipo de detalle sin violar permisos.
 
 ## Variables de entorno
 
@@ -502,7 +549,7 @@ Antes de construir dashboards o monitoreo avanzado, cerrar el MVP operativo con:
 Estado actual:
 
 - backend de eventos y filtros base ya implementado;
-- vistas web de supervision pendientes.
+- vistas web de supervision (equipo hoy, turnos de hoy, actividad del equipo) ya implementadas en el frontend.
 
 ### Fase 3. KPIs y alertas
 
@@ -517,6 +564,7 @@ Estado actual:
 - ya existe una primera capa backend de KPIs operativos sobre `activity_events`, `sessions` y `shifts`;
 - ya existe el submodulo de horarios y asignaciones para usuarios;
 - la puntualidad ya se calcula sobre horarios asignados, turnos reales y tolerancia;
+- ya existen vistas de KPIs (propias y de equipo) con graficos en el frontend;
 - las alertas aun no estan implementadas y quedan fuera del cierre de esta fase.
 
 ### Fase 4. Gobierno y escalado
@@ -529,25 +577,25 @@ Estado actual:
 
 ## Brechas tecnicas identificadas en este analisis
 
-- `frontend/` esta vacio;
+- ya existe un frontend operativo, pero aun no tiene pruebas automatizadas propias;
 - ya existen pruebas unitarias de servicios y primeras pruebas HTTP, pero faltan pruebas de integracion con persistencia real;
 - no hay `.env.example` en el estado original del repo;
 - `requirements.txt` estaba incompleto y con una dependencia invalida;
 - el control de permisos ya diferencia `ADMIN` y `SUPERVISOR`, pero aun falta definir permisos por modulo futuro;
-- ya existe captura controlada de actividad, pero falta convertirla en KPIs, reportes y politicas de retencion automatizadas;
-- ya existe una base de KPIs operativos y horarios con puntualidad real, pero aun faltan alertas y supervision web;
-- ya existe una base para novedades ecommerce y bitacora diaria, pero aun falta integracion real con sistemas externos y dashboards web de esta operacion;
+- ya existe captura controlada de actividad, pero falta convertirla en reportes historicos y politicas de retencion automatizadas;
+- ya existe una base de KPIs operativos y horarios con puntualidad real, y ya tienen vistas web, pero aun faltan alertas operativas;
+- ya existe una base para novedades ecommerce, bitacora diaria y su vista web, pero aun falta integracion real con sistemas externos;
+- la vista "Equipo hoy"/"KPIs del equipo" del frontend resuelve el detalle por usuario con una consulta por empleado (`GET /kpis/users/{id}/overview`); si el equipo crece mucho conviene un endpoint agregado en backend;
 - no hay estrategia de logging, monitoreo ni manejo formal de errores operativos.
 
 ## Siguiente paso recomendado
 
-El siguiente hito razonable no es agregar mas endpoints sueltos, sino cerrar un MVP controlable:
+El siguiente hito razonable no es agregar mas endpoints sueltos, sino cerrar el ciclo de operacion real:
 
-1. construir KPIs operativos sobre `activity_events`, `sessions` y `shifts`;
-2. consolidar el modulo de novedades ecommerce y llevarlo al frontend operativo;
-3. ampliar pruebas de integracion con persistencia real;
-4. definir el frontend minimo para operacion diaria;
-5. exponer vistas de supervision sobre actividad, cumplimiento, horarios y novedades.
+1. ampliar pruebas de integracion con persistencia real y agregar pruebas automatizadas de frontend;
+2. definir alertas operativas sobre inactividad, baja cobertura y acumulacion de novedades;
+3. evaluar un endpoint agregado de KPIs por equipo para evitar N+1 consultas cuando el equipo crezca;
+4. avanzar hacia auditoria, exportaciones y observabilidad (Fase 6 del plan maestro).
 
 ## Notas de trabajo
 
