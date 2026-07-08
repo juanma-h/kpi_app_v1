@@ -3,6 +3,7 @@ from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.domain.enums import ShiftStatus
 
 
 class Shift(Base):
@@ -19,6 +20,6 @@ class Shift(Base):
     )
     end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    status: Mapped[str] = mapped_column(String(10), nullable=False, default="OPEN")
+    status: Mapped[str] = mapped_column(String(10), nullable=False, default=ShiftStatus.OPEN.value)
 
     user = relationship("User", backref="shifts")

@@ -3,6 +3,7 @@ from sqlalchemy import String, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+from app.domain.enums import UserRole
 
 
 class User(Base):
@@ -13,7 +14,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    role: Mapped[str] = mapped_column(String(20), nullable=False, default="EMPLOYEE")
+    role: Mapped[str] = mapped_column(String(20), nullable=False, default=UserRole.EMPLOYEE.value)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     created_at: Mapped[datetime] = mapped_column(
